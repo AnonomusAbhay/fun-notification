@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fun Notification Overlay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: transparent;
+      font-family: 'Outfit', sans-serif;
+      user-select: none;
+      pointer-events: none; /* Make body click-through */
+    }
+
+    #overlay-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background-color: transparent;
+    }
+
+    /* Target theme containers */
+    .animation-wrapper {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      pointer-events: auto; /* Allow interactions on active animated elements if needed */
+    }
+
+    /* 1. Airplane Theme Styles */
+    .airplane-wrapper {
+      left: -800px;
+      top: 25%;
+      height: 120px;
+      gap: 10px;
+    }
+
+    .airplane-svg {
+      width: 130px;
+      height: 100px;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+    }
+
+    .airplane-banner {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 16px 28px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      white-space: nowrap;
+      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transform-origin: left center;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25));
+    }
+
+    /* Waving banner effect using keyframes */
+    .banner-wave {
+      animation: wave 1.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes wave {
+      0% { transform: rotate(-2deg) skewY(-1deg); }
+      100% { transform: rotate(3deg) skewY(2deg); }
+    }
+
+    /* 2. Running Cat Theme Styles */
+    .cat-wrapper {
+      right: -700px;
+      bottom: 50px;
+      height: 100px;
+      gap: 15px;
+    }
+
+    .cat-svg {
+      width: 100px;
+      height: 80px;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
+    }
+
+    .cat-speech-bubble {
+      background: rgba(22, 24, 33, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+      padding: 14px 24px;
+      border-radius: 20px 20px 0 20px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      white-space: nowrap;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      position: relative;
+      transform-origin: bottom right;
+      filter: drop-shadow(0 6px 8px rgba(0,0,0,0.2));
+    }
+
+    .cat-speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: -8px;
+      width: 0;
+      height: 0;
+      border: 8px solid transparent;
+      border-left-color: rgba(22, 24, 33, 0.85);
+      border-bottom-color: rgba(22, 24, 33, 0.85);
+    }
+
+    /* 3. Meme Mode Theme Styles */
+    .meme-wrapper {
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      flex-direction: column;
+      gap: 15px;
+      width: 420px;
+      background: rgba(15, 16, 26, 0.8);
+      backdrop-filter: blur(24px);
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      text-align: center;
+      opacity: 0;
+    }
+
+    .meme-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #a78bfa;
+      font-weight: 800;
+    }
+
+    .meme-message {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.4;
+      margin: 15px 0;
+      font-style: italic;
+    }
+
+    .meme-sender {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .meme-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+      font-weight: 800;
+      margin: 0 auto 10px auto;
+      box-shadow: 0 8px 16px rgba(167, 139, 250, 0.3);
+    }
+  </style>
+  <!-- Load GSAP Core -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <div id="overlay-container">
+    <!-- Active animated element will be dynamically injected here -->
+  </div>
+
+  <!-- Load script -->
+  <script src="overlay.js"></script>
+</body>
+</html>

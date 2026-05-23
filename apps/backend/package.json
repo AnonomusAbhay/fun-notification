@@ -1,0 +1,30 @@
+{
+  "name": "@fun-notification/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.5.0",
+    "@fun-notification/shared-types": "*",
+    "@fun-notification/socket-contracts": "*",
+    "bullmq": "^5.7.8",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.26.2",
+    "ioredis": "^5.4.1",
+    "ioredis-mock": "^8.9.0",
+    "pg": "^8.11.5",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.11.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.4.5"
+  }
+}

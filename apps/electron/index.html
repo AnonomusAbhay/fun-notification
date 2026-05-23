@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fun Notification Dev Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f1015;
+      --panel-bg: rgba(22, 24, 33, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      
+      --status-red: #ef4444;
+      --status-yellow: #f59e0b;
+      --status-green: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--status-red);
+      box-shadow: 0 0 10px var(--status-red);
+    }
+
+    .status-dot.connecting {
+      background-color: var(--status-yellow);
+      box-shadow: 0 0 10px var(--status-yellow);
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-dot.connected, .status-dot.registered {
+      background-color: var(--status-green);
+      box-shadow: 0 0 10px var(--status-green);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(99, 102, 241, 0.2);
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.05);
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      font-size: 0.95rem;
+    }
+
+    .data-row:last-child {
+      border-bottom: none;
+    }
+
+    .data-label {
+      color: var(--text-muted);
+    }
+
+    .data-value {
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .latency-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100px;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      position: relative;
+    }
+
+    .latency-unit {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-left: 6px;
+      font-weight: 400;
+    }
+
+    .console-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 180px;
+    }
+
+    .console-logs {
+      flex: 1;
+      background: rgba(10, 11, 16, 0.9);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: #a7f3d0;
+      overflow-y: auto;
+      max-height: 200px;
+      border: 1px solid rgba(0, 0, 0, 0.5);
+    }
+
+    .log-line {
+      margin-bottom: 6px;
+      line-height: 1.4;
+      border-left: 2px solid transparent;
+      padding-left: 8px;
+    }
+
+    .log-info { border-left-color: #3b82f6; color: #93c5fd; }
+    .log-success { border-left-color: var(--status-green); color: #a7f3d0; }
+    .log-warning { border-left-color: var(--status-yellow); color: #fde047; }
+    .log-error { border-left-color: var(--status-red); color: #fca5a5; }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FUN NOTIFICATION SYSTEM</h1>
+    <div class="status-badge">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="statusText">DISCONNECTED</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Client Registration</div>
+      <div class="data-row">
+        <span class="data-label">User ID</span>
+        <span id="userId" class="data-value">-</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Username</span>
+        <span id="username" class="data-value">-</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Machine ID</span>
+        <span id="machineId" class="data-value">-</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Platform</span>
+        <span id="platform" class="data-value">-</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Heartbeat Status</div>
+      <div class="latency-container">
+        <span id="latency">-</span>
+        <span class="latency-unit">ms</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Last Ping</span>
+        <span id="lastPing" class="data-value">Never</span>
+      </div>
+      <div class="data-row">
+        <span class="data-label">Socket ID</span>
+        <span id="socketId" class="data-value">-</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Local Configurations</div>
+      <div class="data-row" style="align-items: center; justify-content: space-between; display: flex;">
+        <span class="data-label">Do Not Disturb</span>
+        <input type="checkbox" id="dndToggle" style="cursor: pointer; width: 18px; height: 18px;" />
+      </div>
+      <div class="data-row" style="align-items: center; justify-content: space-between; display: flex;">
+        <span class="data-label">Muted Themes</span>
+        <div style="display: flex; gap: 8px; font-size: 0.85rem;">
+          <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;">
+            <input type="checkbox" class="muted-theme-cb" value="airplane" /> Plane
+          </label>
+          <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;">
+            <input type="checkbox" class="muted-theme-cb" value="cat" /> Cat
+          </label>
+          <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;">
+            <input type="checkbox" class="muted-theme-cb" value="meme" /> Meme
+          </label>
+        </div>
+      </div>
+      <div class="data-row" style="align-items: center; justify-content: space-between; display: flex;">
+        <span class="data-label">Admin Mute</span>
+        <span id="globalMuteState" class="data-value" style="color: var(--status-green); font-weight: bold;">INACTIVE</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card console-card">
+    <div class="card-title">Event Log</div>
+    <div id="consoleLogs" class="console-logs">
+      <div class="log-line log-info">System initialized. Waiting for connection...</div>
+    </div>
+  </div>
+
+  <script>
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const userIdVal = document.getElementById('userId');
+    const usernameVal = document.getElementById('username');
+    const machineIdVal = document.getElementById('machineId');
+    const platformVal = document.getElementById('platform');
+    const socketIdVal = document.getElementById('socketId');
+    const latencyVal = document.getElementById('latency');
+    const lastPingVal = document.getElementById('lastPing');
+    const consoleLogs = document.getElementById('consoleLogs');
+
+    function log(message, type = 'info') {
+      const line = document.createElement('div');
+      line.className = `log-line log-${type}`;
+      const time = new Date().toLocaleTimeString();
+      line.innerText = `[${time}] ${message}`;
+      consoleLogs.appendChild(line);
+      consoleLogs.scrollTop = consoleLogs.scrollHeight;
+    }
+
+    if (window.api) {
+      window.api.onStatusChange((data) => {
+        const { status, details } = data;
+        
+        // Reset classes
+        statusDot.className = 'status-dot';
+        statusDot.classList.add(status);
+        statusText.innerText = status.toUpperCase();
+
+        if (status === 'connecting') {
+          log('Attempting to connect to backend server...', 'info');
+        } else if (status === 'connected') {
+          log(`WebSocket connection opened. Socket ID: ${details.socketId}`, 'success');
+          socketIdVal.innerText = details.socketId;
+          userIdVal.innerText = details.userId;
+          usernameVal.innerText = details.username;
+          machineIdVal.innerText = details.machineId;
+          platformVal.innerText = details.platform;
+        } else if (status === 'registered') {
+          log(`Handshake success. Registered on connection: ${details.connectionId}`, 'success');
+          statusText.innerText = 'REGISTERED';
+        } else if (status === 'disconnected') {
+          log(`Socket disconnected. Reason: ${details.reason}`, 'warning');
+          socketIdVal.innerText = '-';
+        } else if (status === 'error') {
+          log(`Connection error: ${details.error}`, 'error');
+        }
+      });
+
+      window.api.onHeartbeatAck((data) => {
+        const { latency } = data;
+        latencyVal.innerText = latency;
+        lastPingVal.innerText = new Date().toLocaleTimeString();
+        log(`Heartbeat ACK. Latency: ${latency}ms`, 'success');
+      });
+
+      window.api.onNotificationReceived((notification) => {
+        log(`NOTIFICATION RECEIVED: "${notification.message}" (From: ${notification.senderName}, Theme: ${notification.theme})`, 'success');
+      });
+
+      // Settings UI Sync
+      const dndToggle = document.getElementById('dndToggle');
+      const mutedCbs = document.querySelectorAll('.muted-theme-cb');
+      const globalMuteState = document.getElementById('globalMuteState');
+
+      function syncSettingsUI() {
+        window.api.getSettings().then((settings) => {
+          dndToggle.checked = !!settings.doNotDisturb;
+          mutedCbs.forEach((cb) => {
+            cb.checked = settings.mutedThemes && settings.mutedThemes.includes(cb.value);
+          });
+          log('Local user configurations loaded.', 'info');
+        }).catch((err) => {
+          log('Failed to fetch settings: ' + err.message, 'error');
+        });
+      }
+
+      syncSettingsUI();
+
+      function saveSettingsFromUI() {
+        const dnd = dndToggle.checked;
+        const muted = [];
+        mutedCbs.forEach((cb) => {
+          if (cb.checked) muted.push(cb.value);
+        });
+        window.api.updateSettings({ doNotDisturb: dnd, mutedThemes: muted }).then((updated) => {
+          log(`Config updated: DnD=${updated.doNotDisturb}, MutedThemes=[${updated.mutedThemes.join(', ')}]`, 'success');
+        });
+      }
+
+      dndToggle.addEventListener('change', saveSettingsFromUI);
+      mutedCbs.forEach((cb) => {
+        cb.addEventListener('change', saveSettingsFromUI);
+      });
+
+      // Global Mute Handler
+      window.api.onGlobalMuteChange((data) => {
+        const isMuted = !!data.muted;
+        globalMuteState.innerText = isMuted ? 'ACTIVE' : 'INACTIVE';
+        globalMuteState.style.color = isMuted ? 'var(--status-red)' : 'var(--status-green)';
+        log(`Global Admin Mute state update received: ${isMuted ? 'Muted' : 'Unmuted'}`, 'warning');
+      });
+
+      // Listen for ESC key inside console to clear active overlays
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          window.api.dismissAllOverlays();
+          log('ESC pressed: Dismissed all active overlays.', 'warning');
+        }
+      });
+    } else {
+      log('IPC API not found. Running outside Electron environment?', 'error');
+    }
+  </script>
+</body>
+</html>
