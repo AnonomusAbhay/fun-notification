@@ -8,7 +8,8 @@ const DEFAULT_SETTINGS = {
   mutedThemes: [],
   doNotDisturb: false,
   serverUrl: '',
-  runAtStartup: true
+  runAtStartup: true,
+  startMinimized: false
 };
 
 let filePath = null;

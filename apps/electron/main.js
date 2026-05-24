@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, powerMonitor } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, powerMonitor, Tray, Menu } from 'electron';
 import { io } from 'socket.io-client';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -23,6 +23,8 @@ const __dirname = path.dirname(__filename);
 let mainWindow = null;
 let socket = null;
 let heartbeatInterval = null;
+let tray = null;
+let isQuitting = false;
 
 // Track active overlay windows: windowId -> notification object
 const activeOverlays = new Map();
@@ -48,6 +50,7 @@ function createWindow() {
     width: 600,
     height: 450,
     title: 'Fun Notification Client - Dev Console',
+    show: !clientSettings.startMinimized,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -57,9 +60,59 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+}
+
+function createTray() {
+  try {
+    const iconPath = path.join(__dirname, 'assets/icon.png');
+    tray = new Tray(iconPath);
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Open Dev Console',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Quit',
+        click: () => {
+          isQuitting = true;
+          app.quit();
+        }
+      }
+    ]);
+
+    tray.setToolTip('Fun Notification System');
+    tray.setContextMenu(contextMenu);
+
+    tray.on('click', () => {
+      if (mainWindow) {
+        if (mainWindow.isVisible()) {
+          mainWindow.hide();
+        } else {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    });
+  } catch (err) {
+    console.error('[Tray] Failed to create system tray icon:', err.message);
+  }
 }
 
 function updateUI(status, details = {}) {
@@ -329,6 +382,7 @@ ipcMain.handle('update-settings', (event, settings) => {
 
 app.whenReady().then(() => {
   createWindow();
+  createTray();
 
   // Apply login item settings for auto-start in production
   if (app.isPackaged) {
@@ -349,8 +403,10 @@ app.whenReady().then(() => {
   }, 1000);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (mainWindow === null) {
       createWindow();
+    } else {
+      mainWindow.show();
     }
   });
 
