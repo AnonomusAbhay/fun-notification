@@ -63,6 +63,9 @@ function createWindow() {
   mainWindow.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault();
+      if (mainWindow.webContents) {
+        mainWindow.webContents.send('lock-console');
+      }
       mainWindow.hide();
     }
   });
@@ -103,6 +106,9 @@ function createTray() {
     tray.on('click', () => {
       if (mainWindow) {
         if (mainWindow.isVisible()) {
+          if (mainWindow.webContents) {
+            mainWindow.webContents.send('lock-console');
+          }
           mainWindow.hide();
         } else {
           mainWindow.show();

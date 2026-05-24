@@ -199,9 +199,118 @@
       50% { opacity: 1; }
       100% { opacity: 0.6; }
     }
+
+    /* Lock Screen styling */
+    .lock-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(10, 11, 16, 0.95);
+      backdrop-filter: blur(24px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .lock-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .lock-box {
+      width: 360px;
+      padding: 32px;
+      background: rgba(22, 24, 33, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+
+    .lock-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .lock-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #a5b4fc 0%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lock-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    .lock-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: rgba(0,0,0,0.3);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .lock-input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .lock-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent-color);
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .lock-btn:hover {
+      background: #4f46e5;
+    }
+
+    .lock-error {
+      color: var(--status-red);
+      font-size: 0.8rem;
+      margin-top: 12px;
+      min-height: 18px;
+    }
   </style>
 </head>
 <body>
+  <!-- Lock Screen Overlay -->
+  <div id="lockScreen" class="lock-screen">
+    <div class="lock-box">
+      <div class="lock-icon">🔒</div>
+      <h2 class="lock-title">Console Locked</h2>
+      <p class="lock-subtitle">Enter administrator password to access configurations</p>
+      <input type="password" id="passwordInput" class="lock-input" placeholder="Password" />
+      <button id="unlockBtn" class="lock-btn">Unlock</button>
+      <div id="lockError" class="lock-error"></div>
+    </div>
+  </div>
+
   <header>
     <h1>FUN NOTIFICATION SYSTEM</h1>
     <div class="status-badge">
@@ -438,6 +547,46 @@
           window.api.dismissAllOverlays();
           log('ESC pressed: Dismissed all active overlays.', 'warning');
         }
+      });
+
+      // Password locking logic
+      const lockScreen = document.getElementById('lockScreen');
+      const passwordInput = document.getElementById('passwordInput');
+      const unlockBtn = document.getElementById('unlockBtn');
+      const lockError = document.getElementById('lockError');
+
+      const ADMIN_PASSWORD = "Bore@7283hehe.mazimarzi";
+
+      function unlockConsole() {
+        const val = passwordInput.value;
+        if (val === ADMIN_PASSWORD) {
+          lockScreen.classList.add('hidden');
+          passwordInput.value = '';
+          lockError.innerText = '';
+          log('Console successfully unlocked.', 'success');
+        } else {
+          lockError.innerText = 'Incorrect password. Access denied.';
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      }
+
+      unlockBtn.addEventListener('click', unlockConsole);
+      passwordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          unlockConsole();
+        }
+      });
+
+      // Focus password input on load
+      passwordInput.focus();
+
+      // Listen for lock signal from main process
+      window.api.onLockConsole(() => {
+        lockScreen.classList.remove('hidden');
+        passwordInput.value = '';
+        lockError.innerText = '';
+        passwordInput.focus();
       });
     } else {
       log('IPC API not found. Running outside Electron environment?', 'error');

@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld('api', {
   onGlobalMuteChange: (callback) => {
     ipcRenderer.on('global-mute-change', (event, data) => callback(data));
   },
+  onLockConsole: (callback) => {
+    ipcRenderer.on('lock-console', (event) => callback());
+  },
   
   // Overlay IPC APIs
   getNotificationPayload: () => {
