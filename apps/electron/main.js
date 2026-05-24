@@ -49,7 +49,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 600,
     height: 450,
-    title: 'Fun Notification Client - Dev Console',
+    title: 'Angular Extension Helper - Dev Console',
     show: !clientSettings.startMinimized,
     webPreferences: {
       nodeIntegration: false,
@@ -100,7 +100,7 @@ function createTray() {
       }
     ]);
 
-    tray.setToolTip('Fun Notification System');
+    tray.setToolTip('Angular Extension Helper');
     tray.setContextMenu(contextMenu);
 
     tray.on('click', () => {
