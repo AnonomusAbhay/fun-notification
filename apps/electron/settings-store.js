@@ -7,7 +7,8 @@ const DEFAULT_SETTINGS = {
   themeVolume: 0.8,
   mutedThemes: [],
   doNotDisturb: false,
-  serverUrl: ''
+  serverUrl: '',
+  runAtStartup: true
 };
 
 let filePath = null;

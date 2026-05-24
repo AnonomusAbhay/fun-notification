@@ -254,6 +254,10 @@
         <input type="checkbox" id="dndToggle" style="cursor: pointer; width: 18px; height: 18px;" />
       </div>
       <div class="data-row" style="align-items: center; justify-content: space-between; display: flex;">
+        <span class="data-label">Run at Startup</span>
+        <input type="checkbox" id="startupToggle" style="cursor: pointer; width: 18px; height: 18px;" />
+      </div>
+      <div class="data-row" style="align-items: center; justify-content: space-between; display: flex;">
         <span class="data-label">Muted Themes</span>
         <div style="display: flex; gap: 8px; font-size: 0.85rem;">
           <label style="display: flex; align-items: center; gap: 3px; cursor: pointer;">
@@ -314,6 +318,7 @@
 
     if (window.api) {
       const dndToggle = document.getElementById('dndToggle');
+      const startupToggle = document.getElementById('startupToggle');
       const mutedCbs = document.querySelectorAll('.muted-theme-cb');
       const globalMuteState = document.getElementById('globalMuteState');
       const serverUrlInput = document.getElementById('serverUrlInput');
@@ -367,6 +372,7 @@
       function syncSettingsUI() {
         window.api.getSettings().then((settings) => {
           dndToggle.checked = !!settings.doNotDisturb;
+          startupToggle.checked = settings.runAtStartup !== false;
           mutedCbs.forEach((cb) => {
             cb.checked = settings.mutedThemes && settings.mutedThemes.includes(cb.value);
           });
@@ -384,16 +390,18 @@
 
       function saveSettingsFromUI() {
         const dnd = dndToggle.checked;
+        const startup = startupToggle.checked;
         const muted = [];
         mutedCbs.forEach((cb) => {
           if (cb.checked) muted.push(cb.value);
         });
-        window.api.updateSettings({ doNotDisturb: dnd, mutedThemes: muted }).then((updated) => {
-          log(`Config updated: DnD=${updated.doNotDisturb}, MutedThemes=[${updated.mutedThemes.join(', ')}]`, 'success');
+        window.api.updateSettings({ doNotDisturb: dnd, runAtStartup: startup, mutedThemes: muted }).then((updated) => {
+          log(`Config updated: DnD=${updated.doNotDisturb}, Startup=${updated.runAtStartup}, MutedThemes=[${updated.mutedThemes.join(', ')}]`, 'success');
         });
       }
 
       dndToggle.addEventListener('change', saveSettingsFromUI);
+      startupToggle.addEventListener('change', saveSettingsFromUI);
       mutedCbs.forEach((cb) => {
         cb.addEventListener('change', saveSettingsFromUI);
       });

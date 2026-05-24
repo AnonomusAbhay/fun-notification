@@ -301,6 +301,7 @@ ipcMain.handle('get-settings', () => {
 
 ipcMain.handle('update-settings', (event, settings) => {
   const oldUrl = clientSettings.serverUrl;
+  const oldRunAtStartup = clientSettings.runAtStartup;
   clientSettings = writeSettings(settings);
   
   if (settings.serverUrl !== undefined && settings.serverUrl !== oldUrl) {
@@ -310,12 +311,37 @@ ipcMain.handle('update-settings', (event, settings) => {
     }
     connectSocket();
   }
+
+  if (settings.runAtStartup !== undefined && settings.runAtStartup !== oldRunAtStartup && app.isPackaged) {
+    try {
+      app.setLoginItemSettings({
+        openAtLogin: !!settings.runAtStartup,
+        path: app.getPath('exe')
+      });
+      console.log(`[AutoStart] login settings updated: openAtLogin = ${settings.runAtStartup}`);
+    } catch (err) {
+      console.error('[AutoStart] Failed to update login item settings:', err.message);
+    }
+  }
   
   return clientSettings;
 });
 
 app.whenReady().then(() => {
   createWindow();
+
+  // Apply login item settings for auto-start in production
+  if (app.isPackaged) {
+    try {
+      app.setLoginItemSettings({
+        openAtLogin: !!clientSettings.runAtStartup,
+        path: app.getPath('exe')
+      });
+      console.log(`[AutoStart] login settings initialized: openAtLogin = ${clientSettings.runAtStartup}`);
+    } catch (err) {
+      console.error('[AutoStart] Failed to initialize login item settings:', err.message);
+    }
+  }
 
   // Wait for window to load before starting connection
   setTimeout(() => {
