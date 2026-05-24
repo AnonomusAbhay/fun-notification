@@ -64,7 +64,12 @@ function createWindow() {
 
 function updateUI(status, details = {}) {
   if (mainWindow && mainWindow.webContents) {
-    mainWindow.webContents.send('status-change', { status, details });
+    const defaultUrl = app.isPackaged ? 'https://fun-notification-api.onrender.com' : 'http://localhost:3000';
+    const activeUrl = clientSettings.serverUrl || process.env.SOCKET_URL || defaultUrl;
+    mainWindow.webContents.send('status-change', { 
+      status, 
+      details: { ...details, activeUrl } 
+    });
   }
 }
 
@@ -137,7 +142,8 @@ function createOverlayWindow(notification) {
 }
 
 function connectSocket() {
-  const socketUrl = clientSettings.serverUrl || process.env.SOCKET_URL || 'http://localhost:3000';
+  const defaultUrl = app.isPackaged ? 'https://fun-notification-api.onrender.com' : 'http://localhost:3000';
+  const socketUrl = clientSettings.serverUrl || process.env.SOCKET_URL || defaultUrl;
   console.log(`Connecting to WebSocket server: ${socketUrl}`);
   updateUI('connecting');
 
@@ -294,7 +300,17 @@ ipcMain.handle('get-settings', () => {
 });
 
 ipcMain.handle('update-settings', (event, settings) => {
+  const oldUrl = clientSettings.serverUrl;
   clientSettings = writeSettings(settings);
+  
+  if (settings.serverUrl !== undefined && settings.serverUrl !== oldUrl) {
+    console.log(`[Settings] Server URL changed from "${oldUrl}" to "${settings.serverUrl}". Reconnecting...`);
+    if (socket) {
+      socket.disconnect();
+    }
+    connectSocket();
+  }
+  
   return clientSettings;
 });
 

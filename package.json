@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build:shared": "npm run build --workspaces --if-present",
+    "build:shared": "npm run build --workspace=packages/shared-types && npm run build --workspace=packages/socket-contracts && npm run build --workspace=packages/theme-engine && npm run build --workspace=apps/backend",
     "dev:backend": "npm run dev --workspace=apps/backend",
     "dev:dashboard": "npm run dev --workspace=apps/sender-dashboard",
     "start:electron": "npm start --workspace=apps/electron"

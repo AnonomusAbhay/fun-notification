@@ -271,6 +271,16 @@
         <span class="data-label">Admin Mute</span>
         <span id="globalMuteState" class="data-value" style="color: var(--status-green); font-weight: bold;">INACTIVE</span>
       </div>
+      <div class="data-row" style="flex-direction: column; align-items: stretch; gap: 8px; padding-top: 12px; border-top: 1px dashed rgba(255, 255, 255, 0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <span class="data-label">Server Connection</span>
+          <span id="activeServerUrl" class="data-value" style="font-size: 0.8rem; opacity: 0.8; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</span>
+        </div>
+        <div style="display: flex; gap: 6px; width: 100%;">
+          <input type="text" id="serverUrlInput" placeholder="http://localhost:3000" style="flex: 1; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.3); color: var(--text-main); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;" />
+          <button id="saveServerUrlBtn" style="padding: 5px 10px; border-radius: 6px; border: none; background: var(--accent-color); color: white; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='var(--accent-color)'">Save</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -303,6 +313,13 @@
     }
 
     if (window.api) {
+      const dndToggle = document.getElementById('dndToggle');
+      const mutedCbs = document.querySelectorAll('.muted-theme-cb');
+      const globalMuteState = document.getElementById('globalMuteState');
+      const serverUrlInput = document.getElementById('serverUrlInput');
+      const activeServerUrl = document.getElementById('activeServerUrl');
+      const saveServerUrlBtn = document.getElementById('saveServerUrlBtn');
+
       window.api.onStatusChange((data) => {
         const { status, details } = data;
         
@@ -311,8 +328,12 @@
         statusDot.classList.add(status);
         statusText.innerText = status.toUpperCase();
 
+        if (details && details.activeUrl) {
+          activeServerUrl.innerText = details.activeUrl;
+        }
+
         if (status === 'connecting') {
-          log('Attempting to connect to backend server...', 'info');
+          log(`Attempting to connect to backend server: ${details?.activeUrl || ''}`, 'info');
         } else if (status === 'connected') {
           log(`WebSocket connection opened. Socket ID: ${details.socketId}`, 'success');
           socketIdVal.innerText = details.socketId;
@@ -343,16 +364,16 @@
       });
 
       // Settings UI Sync
-      const dndToggle = document.getElementById('dndToggle');
-      const mutedCbs = document.querySelectorAll('.muted-theme-cb');
-      const globalMuteState = document.getElementById('globalMuteState');
-
       function syncSettingsUI() {
         window.api.getSettings().then((settings) => {
           dndToggle.checked = !!settings.doNotDisturb;
           mutedCbs.forEach((cb) => {
             cb.checked = settings.mutedThemes && settings.mutedThemes.includes(cb.value);
           });
+          if (settings.serverUrl) {
+            serverUrlInput.value = settings.serverUrl;
+            activeServerUrl.innerText = settings.serverUrl;
+          }
           log('Local user configurations loaded.', 'info');
         }).catch((err) => {
           log('Failed to fetch settings: ' + err.message, 'error');
@@ -375,6 +396,16 @@
       dndToggle.addEventListener('change', saveSettingsFromUI);
       mutedCbs.forEach((cb) => {
         cb.addEventListener('change', saveSettingsFromUI);
+      });
+
+      saveServerUrlBtn.addEventListener('click', () => {
+        const val = serverUrlInput.value.trim();
+        window.api.updateSettings({ serverUrl: val }).then((updated) => {
+          activeServerUrl.innerText = updated.serverUrl || 'Default';
+          log(`Server URL updated to: ${updated.serverUrl || 'Default (Auto)'}`, 'success');
+        }).catch((err) => {
+          log(`Failed to update server URL: ${err.message}`, 'error');
+        });
       });
 
       // Global Mute Handler
