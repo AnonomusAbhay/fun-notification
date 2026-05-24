@@ -3,7 +3,7 @@ services:
     name: fun-notification-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build:shared
+    buildCommand: npm install --include=dev && npm run build:shared
     startCommand: npm start --workspace=apps/backend
     envVars:
       - key: DATABASE_URL
