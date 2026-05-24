@@ -313,6 +313,34 @@ export default function App() {
                   <div className="theme-icon">💬</div>
                   <div className="theme-name">Meme</div>
                 </div>
+                <div
+                  className={`theme-card ${theme === 'intern' ? 'active' : ''}`}
+                  onClick={() => setTheme('intern')}
+                >
+                  <div className="theme-icon">🏃</div>
+                  <div className="theme-name">Intern</div>
+                </div>
+                <div
+                  className={`theme-card ${theme === 'news' ? 'active' : ''}`}
+                  onClick={() => setTheme('news')}
+                >
+                  <div className="theme-icon">📺</div>
+                  <div className="theme-name">News</div>
+                </div>
+                <div
+                  className={`theme-card ${theme === 'pirate' ? 'active' : ''}`}
+                  onClick={() => setTheme('pirate')}
+                >
+                  <div className="theme-icon">☠️</div>
+                  <div className="theme-name">Pirate</div>
+                </div>
+                <div
+                  className={`theme-card ${theme === 'ninja' ? 'active' : ''}`}
+                  onClick={() => setTheme('ninja')}
+                >
+                  <div className="theme-icon">🥷</div>
+                  <div className="theme-name">Ninja</div>
+                </div>
               </div>
             </div>
 
