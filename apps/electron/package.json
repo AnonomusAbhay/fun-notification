@@ -48,7 +48,9 @@
     },
     "nsis": {
       "oneClick": true,
-      "perMachine": false
+      "perMachine": false,
+      "createDesktopShortcut": false,
+      "createStartMenuShortcut": true
     }
   }
 }
